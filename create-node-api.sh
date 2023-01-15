@@ -5,9 +5,9 @@ WEBPACK_CONF="webpack.config.ts"
 yarn init -y
 clear
 # Install dependencies
-yarn add -D @babel/core @babel/preset-env @babel/preset-typescript @types/node @types/webpack @types/webpack-node-externals babel-loader ts-loader ts-node typescript webpack webpack-cli webpack-node-externals webpack-shell-plugin-next rimraf nodemon webpack-dev-server dotenv @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint eslint-config-standard eslint-plugin-import eslint-plugin-node eslint-plugin-promise eslint-plugin-standard prettier @types/cors @types/express @types/cookie-parser @tsconfig/recommended
+yarn add -D @babel/core @babel/preset-env @babel/preset-typescript @types/node @types/webpack @types/webpack-node-externals babel-loader ts-loader ts-node typescript webpack webpack-cli webpack-node-externals webpack-shell-plugin-next rimraf nodemon webpack-dev-server @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint eslint-config-standard eslint-plugin-import eslint-plugin-node eslint-plugin-promise eslint-plugin-standard prettier @types/cors @types/express @types/cookie-parser @tsconfig/recommended
 clear
-yarn add express cors cookie-parser helmet http-terminator
+yarn add express cors cookie-parser helmet http-terminator dotenv
 
 
 #----- Webpack Config -----
