@@ -5,7 +5,7 @@ WEBPACK_CONF="webpack.config.ts"
 yarn init -y
 clear
 # Install dependencies
-yarn add -D @babel/core @babel/preset-env @babel/preset-typescript @types/node @types/webpack @types/webpack-node-externals babel-loader ts-loader ts-node typescript webpack webpack-cli webpack-node-externals webpack-shell-plugin-next rimraf nodemon webpack-dev-server @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint eslint-plugin-import eslint-plugin-node eslint-plugin-promise eslint-plugin-standard prettier @types/cors @types/express @types/cookie-parser @tsconfig/recommended
+yarn add -D @babel/core @babel/preset-env @babel/preset-typescript @types/node @types/webpack @types/webpack-node-externals babel-loader ts-loader ts-node typescript webpack webpack-cli webpack-node-externals webpack-shell-plugin-next rimraf nodemon webpack-dev-server @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint eslint-plugin-import eslint-plugin-node eslint-plugin-promise eslint-plugin-standard prettier @types/cors @types/express @types/cookie-parser @tsconfig/recommended tsconfig-paths-webpack-plugin
 # removed: eslint-config-standard
 clear
 yarn add express cors cookie-parser helmet http-terminator dotenv
@@ -13,65 +13,69 @@ yarn add express cors cookie-parser helmet http-terminator dotenv
 
 #----- Webpack Config -----
 
-echo '''import path from "path";
-import nodeExternals from "webpack-node-externals";
-import { Configuration } from "webpack";
-import WebpackShellPluginNext from "webpack-shell-plugin-next";
-const getConfig = (
-	env: { [key: string]: string },
-	argv: { [key: string]: string }
-): Configuration => {
-	require("dotenv").config({
-		path: path.resolve(__dirname, `.env`),
-	});
-	return {
-		entry: "./src/index.ts",
-		target: "node",
-		mode: argv.mode === "production" ? "production" : "development",
-		externals: [nodeExternals()],
-		plugins: [
-			new WebpackShellPluginNext({
-				onBuildStart: {
-					scripts: ["npm run clean:dev && npm run clean:prod"],
-					blocking: true,
-					parallel: false,
-				},
-				onBuildEnd: {
-					scripts: ["npm run dev"],
-					blocking: false,
-					parallel: true,
-				},
-			}),
-		],
-		module: {
-			rules: [
-				{
-					test: /\.(ts|js)$/,
-					loader: "ts-loader",
-					options: {},
-					exclude: /node_modules/,
-				},
-			],
-		},
-		resolve: {
-			extensions: [".ts", ".js"],
-			alias: {
-				src: path.resolve(__dirname, "src"),
-			},
-		},
-		output: {
-			path: path.join(__dirname, "build"),
-			filename: "index.js",
-		},
-		optimization: {
-			moduleIds: "deterministic",
-			splitChunks: {
-				chunks: "all",
-			},
-		},
-	};
-};
-export default getConfig;''' >> $WEBPACK_CONF
+echo """import path from 'path'
+import nodeExternals from 'webpack-node-externals'
+import { Configuration } from 'webpack'
+import WebpackShellPluginNext from 'webpack-shell-plugin-next'
+import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
+const getConfig = (_env: { [key: string]: string }, argv: { [key: string]: string }): Configuration => {
+  require('dotenv').config({
+    path: path.resolve(__dirname, `.env`)
+  })
+  return {
+    entry: './src/index.ts',
+    target: 'node',
+    mode: argv.mode === 'production' ? 'production' : 'development',
+    externals: [nodeExternals()],
+    plugins: [
+      new WebpackShellPluginNext({
+        onBuildStart: {
+          scripts: ['npm run clean:dev && npm run clean:prod'],
+          blocking: true,
+          parallel: false
+        },
+        onBuildEnd: {
+          scripts: ['npm run dev'],
+          blocking: false,
+          parallel: true
+        }
+      })
+    ],
+    module: {
+      rules: [
+        {
+          test: /\.(ts|js)$/,
+          loader: 'ts-loader',
+          options: {},
+          exclude: /node_modules/
+        }
+      ]
+    },
+    resolve: {
+      plugins: [new TsconfigPathsPlugin()],
+      extensions: ['.ts', '.js'],
+      alias: {
+        src: path.resolve(__dirname, 'src'),
+        libs: path.resolve(__dirname, 'src/libs/*'),
+        repos: path.resolve(__dirname, 'src/repos/*'),
+        controllers: path.resolve(__dirname, 'src/controllers/*'),
+        middlewares: path.resolve(__dirname, 'src/middlewares/*')
+      }
+    },
+    output: {
+      path: path.join(__dirname, 'build'),
+      filename: 'index.js'
+    },
+    optimization: {
+      moduleIds: 'deterministic',
+      splitChunks: {
+        chunks: 'all'
+      }
+    }
+  }
+}
+export default getConfig
+""" >> $WEBPACK_CONF
 
 mkdir src src/controllers src/repos src/middlewares src/middlewares/auth src/libs src/routes src/www
 
@@ -101,7 +105,7 @@ echo '''{
     "noImplicitThis": false,
     "strictNullChecks": false,
     "outDir": "./build",
-    "baseUrl": ".",
+    "baseUrl": "./",
     "paths": {
       "@src/*": ["src/*"],
       "@libs/*": ["src/libs/*"],
@@ -154,7 +158,7 @@ const corsOptions: cors.CorsOptions = {
 export default corsOptions;""" >> src/libs/cors.ts
 # SERVICE BREAKER
 echo '''import { exit } from "process";
-import server, { httpTerminator } from "@src/app";
+import server, { httpTerminator } from "src/app";
 class ServiceBreaker {
   public async handleExit(code: number, timeout = 5000): Promise<void> {
     try {
@@ -183,7 +187,7 @@ class ServiceBreaker {
 export default new ServiceBreaker();
 ''' >> src/libs/service-breaker.ts
 # PROCESS
-echo '''import serviceBreaker from "@libs/service-breaker";
+echo '''import serviceBreaker from "libs/service-breaker";
 process.on("unhandledRejection", (reason: Error | any) => {
 	console.log(`Unhandled Rejection: ${reason.message || reason}`);
 	throw new Error(reason.message || reason);
@@ -206,7 +210,7 @@ import cors from 'cors';
 import express, { Application, urlencoded, json, Request, Response, NextFunction } from 'express';
 import { createHttpTerminator } from 'http-terminator';
 import { createServer, Server } from 'http';
-import corsOptions from '@libs/cors';
+import corsOptions from 'libs/cors';
 
 const app: Application = express();
 const server: Server = createServer(app);
@@ -248,9 +252,9 @@ app.use((err: Error, req: Request, res: Response) => {
 
 export default server;""" >> src/app.ts
 # ENTRY
-echo '''import "@src/process";
+echo '''import "src/process";
 import * as dotenv from "dotenv";
-import server from "@src/app";
+import server from "src/app";
 dotenv.config();
 
 server.listen(process.env.PORT, () => {
@@ -263,13 +267,11 @@ export const useAsync = (fn: RequestHandler) => (req: Request, res: Response, ne
 
 
 
-echo '''# APP INIT
+echo '''# APP CONFIG
+#APP_NAME=name
+#APP_URI=name.com
 PORT=8000
-TZ=Asia/Dhaka
-MAINTENANCE_BREAK=1
-# APP CONFIG
-APP_NAME=name
-APP_URI=name.com
+#TZ=Asia/Dhaka
 
 # DATABASE CONFIG
 
@@ -316,7 +318,7 @@ clear
 npx eslint --init
 clear
 
-echo '''
+echo ''' Copy below code and save inside package.json
 "scripts": {
     "serve": "webpack --watch --env mode=development --config webpack.config.ts",
     "clean:dev": "rimraf build",
