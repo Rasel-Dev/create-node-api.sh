@@ -5,7 +5,8 @@ WEBPACK_CONF="webpack.config.ts"
 yarn init -y
 clear
 # Install dependencies
-yarn add -D @babel/core @babel/preset-env @babel/preset-typescript @types/node @types/webpack @types/webpack-node-externals babel-loader ts-loader ts-node typescript webpack webpack-cli webpack-node-externals webpack-shell-plugin-next rimraf nodemon webpack-dev-server @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint eslint-config-standard eslint-plugin-import eslint-plugin-node eslint-plugin-promise eslint-plugin-standard prettier @types/cors @types/express @types/cookie-parser @tsconfig/recommended
+yarn add -D @babel/core @babel/preset-env @babel/preset-typescript @types/node @types/webpack @types/webpack-node-externals babel-loader ts-loader ts-node typescript webpack webpack-cli webpack-node-externals webpack-shell-plugin-next rimraf nodemon webpack-dev-server @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint eslint-plugin-import eslint-plugin-node eslint-plugin-promise eslint-plugin-standard prettier @types/cors @types/express @types/cookie-parser @tsconfig/recommended
+# removed: eslint-config-standard
 clear
 yarn add express cors cookie-parser helmet http-terminator dotenv
 
@@ -71,18 +72,6 @@ const getConfig = (
 	};
 };
 export default getConfig;''' >> $WEBPACK_CONF
-
-echo '''
-"scripts": {
-    "serve": "webpack --watch --env mode=development --config webpack.config.ts",
-    "clean:dev": "rimraf build",
-    "clean:prod": "rimraf dist",
-    "build": "webpack --mode production --config webpack.config.ts",
-    "dev": "nodemon build/index.js --watch build",
-    "prod": "nodemon dist/index.js --watch dist",
-    "test": "echo \"Error: no test specified\" && exit 1"
-},
-'''
 
 mkdir src src/controllers src/repos src/middlewares src/middlewares/auth src/libs src/routes src/www
 
@@ -325,3 +314,16 @@ Authorization: bearer {{accessToken}}''' >> src/www/client.http
 
 clear
 npx eslint --init
+clear
+
+echo '''
+"scripts": {
+    "serve": "webpack --watch --env mode=development --config webpack.config.ts",
+    "clean:dev": "rimraf build",
+    "clean:prod": "rimraf dist",
+    "build": "webpack --mode production --config webpack.config.ts",
+    "dev": "nodemon build/index.js --watch build",
+    "prod": "nodemon dist/index.js --watch dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+},
+'''
